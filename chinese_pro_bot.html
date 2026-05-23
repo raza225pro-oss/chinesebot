@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chinese Pro Bot</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#f0f2f5;color:#1a1a2e;font-family:Arial,Helvetica,sans-serif;min-height:100vh;}
+.container{max-width:500px;margin:0 auto;padding:16px 12px 60px;}
+.header{text-align:center;margin-bottom:18px;padding:18px 0 8px;}
+.logo{font-size:22px;font-weight:800;color:#1a1a2e;}
+.logo span{color:#e53935;}
+.tagline{font-size:11px;color:#999;margin-top:3px;}
+.card{background:#fff;border-radius:14px;padding:16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.07);}
+.card-title{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+.search-wrap{position:relative;margin-bottom:8px;}
+.search-wrap input{width:100%;border:1.5px solid #e0e0e0;border-radius:10px;padding:11px 14px 11px 38px;font-size:14px;font-family:Arial,sans-serif;outline:none;background:#f8f9fb;color:#222;transition:border-color 0.2s;}
+.search-wrap input:focus{border-color:#1565c0;background:#fff;}
+.search-wrap input::placeholder{color:#bbb;}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:15px;color:#bbb;pointer-events:none;}
+.dropdown-list{border:1.5px solid #e0e0e0;border-radius:10px;background:#fff;max-height:220px;overflow-y:auto;display:none;}
+.dropdown-list.open{display:block;}
+.dropdown-list::-webkit-scrollbar{width:4px;}
+.dropdown-list::-webkit-scrollbar-thumb{background:#ddd;border-radius:4px;}
+.list-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid #f5f5f5;cursor:pointer;transition:background 0.1s;}
+.list-item:last-child{border-bottom:none;}
+.list-item:hover{background:#f0f4ff;}
+.list-item.selected{background:#e8f0fe;}
+.list-item-icon{font-size:16px;width:22px;text-align:center;flex-shrink:0;}
+.list-item-main{flex:1;}
+.list-item-name{font-size:13px;font-weight:600;color:#222;}
+.list-item-sub{font-size:10px;color:#999;margin-top:1px;}
+.list-item-check{color:#1565c0;font-size:14px;display:none;}
+.list-item.selected .list-item-check{display:block;}
+.selected-display{display:none;align-items:center;gap:10px;background:#e8f0fe;border-radius:10px;padding:10px 14px;margin-bottom:8px;cursor:pointer;}
+.selected-display.show{display:flex;}
+.selected-display-icon{font-size:18px;}
+.selected-display-text{flex:1;}
+.selected-display-name{font-size:13px;font-weight:700;color:#1565c0;}
+.selected-display-sub{font-size:10px;color:#5c85d6;}
+.selected-display-change{font-size:11px;color:#888;white-space:nowrap;}
+.cat-tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;}
+.cat-tab{background:#f0f0f0;border:none;border-radius:20px;padding:5px 11px;font-size:11px;color:#666;cursor:pointer;font-family:Arial,sans-serif;transition:all 0.15s;}
+.cat-tab.active{background:#1565c0;color:#fff;font-weight:700;}
+.time-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+.time-btn{background:#f8f9fb;border:1.5px solid #e0e0e0;border-radius:10px;padding:11px 6px;font-size:13px;font-weight:600;color:#555;cursor:pointer;font-family:Arial,sans-serif;transition:all 0.15s;text-align:center;}
+.time-btn:hover{border-color:#e53935;color:#e53935;background:#fff5f5;}
+.time-btn.selected{background:#ffebee;border-color:#e53935;color:#e53935;}
+.signal-btn-wrap{margin-top:14px;display:none;}
+#getSignalBtn{width:100%;background:#1565c0;border:none;border-radius:12px;padding:15px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:Arial,sans-serif;transition:all 0.2s;}
+#getSignalBtn:hover{background:#0d47a1;}
+#getSignalBtn:disabled{opacity:0.6;cursor:not-allowed;}
+#analysisBanner{display:none;background:#fff;border-radius:14px;padding:20px 16px;margin-top:10px;box-shadow:0 1px 4px rgba(0,0,0,0.07);text-align:center;}
+.analysis-title{font-size:13px;font-weight:700;color:#1565c0;margin-bottom:14px;}
+.analysis-steps{display:flex;flex-direction:column;gap:8px;text-align:left;}
+.a-step{display:flex;align-items:center;gap:10px;font-size:12px;color:#aaa;transition:color 0.3s;}
+.a-step.done{color:#43a047;}
+.a-step.active{color:#1565c0;font-weight:700;}
+.a-step-icon{font-size:14px;width:20px;text-align:center;}
+.a-bar{margin-top:14px;height:4px;background:#e0e0e0;border-radius:2px;overflow:hidden;}
+.a-bar-fill{height:100%;width:0%;background:#1565c0;border-radius:2px;transition:width 0.4s ease;}
+#signalResult{display:none;background:#fff;border-radius:14px;padding:22px 16px;margin-top:10px;box-shadow:0 1px 4px rgba(0,0,0,0.07);text-align:center;animation:fadeUp 0.3s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.sig-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-bottom:16px;}
+.sig-pill{background:#f0f0f0;border-radius:20px;padding:4px 12px;font-size:11px;color:#666;}
+.sig-arrow{font-size:64px;line-height:1;margin-bottom:8px;}
+.sig-direction{font-size:30px;font-weight:800;margin-bottom:4px;}
+.sig-direction.up{color:#2e7d32;}
+.sig-direction.down{color:#c62828;}
+.sig-label{font-size:12px;color:#999;margin-bottom:16px;}
+.strength-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px;}
+.strength-label{font-size:11px;color:#999;}
+.strength-bars{display:flex;gap:3px;align-items:flex-end;}
+.sbar{width:8px;border-radius:2px;background:#e0e0e0;}
+.sbar:nth-child(1){height:8px}.sbar:nth-child(2){height:13px}.sbar:nth-child(3){height:18px}.sbar:nth-child(4){height:23px}.sbar:nth-child(5){height:29px}
+.sbar.up{background:#43a047;}
+.sbar.down{background:#e53935;}
+.countdown-section{background:#f8f9fb;border-radius:10px;padding:12px;}
+.countdown-label{font-size:11px;color:#999;margin-bottom:6px;}
+.countdown-time{font-size:28px;font-weight:800;color:#1a1a2e;margin-bottom:8px;}
+.countdown-bar-bg{height:5px;background:#e0e0e0;border-radius:3px;overflow:hidden;}
+.countdown-bar{height:100%;border-radius:3px;transition:width 1s linear;}
+.countdown-bar.up{background:#43a047;}
+.countdown-bar.down{background:#e53935;}
+/* Sync info badge */
+.sync-badge{font-size:10px;color:#888;margin-top:6px;text-align:center;}
+.sync-dot{display:inline-block;width:6px;height:6px;background:#43a047;border-radius:50%;margin-right:4px;vertical-align:middle;}
+footer{text-align:center;margin-top:30px;font-size:10px;color:#ccc;}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="logo">CHINESE <span>PRO</span> BOT</div>
+    <div class="tagline">AI-Powered Market Signal Engine</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Step 1 — Select Your Time Zone</div>
+    <div class="selected-display" id="tzDisplay" onclick="resetTz()">
+      <span class="selected-display-icon">🌍</span>
+      <div class="selected-display-text">
+        <div class="selected-display-name" id="tzDisplayName"></div>
+        <div class="selected-display-sub" id="tzDisplaySub"></div>
+      </div>
+      <span class="selected-display-change">✎ Change</span>
+    </div>
+    <div id="tzSearchWrap">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="tzSearch" placeholder="Search city or timezone..." oninput="filterTz()" autocomplete="off">
+      </div>
+      <div class="dropdown-list open" id="tzList"></div>
+    </div>
+  </div>
+
+  <div class="card" id="step2Card" style="opacity:0.4;pointer-events:none;">
+    <div class="card-title">Step 2 — Select Market</div>
+    <div class="selected-display" id="mktDisplay" onclick="resetMkt()">
+      <span class="selected-display-icon" id="mktDisplayIcon"></span>
+      <div class="selected-display-text">
+        <div class="selected-display-name" id="mktDisplayName"></div>
+        <div class="selected-display-sub" id="mktDisplaySub"></div>
+      </div>
+      <span class="selected-display-change">✎ Change</span>
+    </div>
+    <div id="mktSearchWrap">
+      <div class="cat-tabs" id="catTabs"></div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="mktSearch" placeholder="Search market, symbol..." oninput="filterMkt()" autocomplete="off">
+      </div>
+      <div class="dropdown-list open" id="mktList"></div>
+    </div>
+  </div>
+
+  <div class="card" id="step3Card" style="opacity:0.4;pointer-events:none;">
+    <div class="card-title">Step 3 — Select Candle Time</div>
+    <div class="time-grid">
+      <button class="time-btn" onclick="selectTime(1,this)">1 MIN</button>
+      <button class="time-btn" onclick="selectTime(2,this)">2 MIN</button>
+      <button class="time-btn" onclick="selectTime(3,this)">3 MIN</button>
+      <button class="time-btn" onclick="selectTime(5,this)">5 MIN</button>
+      <button class="time-btn" onclick="selectTime(10,this)">10 MIN</button>
+      <button class="time-btn" onclick="selectTime(15,this)">15 MIN</button>
+      <button class="time-btn" onclick="selectTime(30,this)">30 MIN</button>
+      <button class="time-btn" onclick="selectTime(60,this)">1 HOUR</button>
+      <button class="time-btn" onclick="selectTime(240,this)">4 HOUR</button>
+    </div>
+  </div>
+
+  <div class="signal-btn-wrap" id="signalBtnWrap">
+    <button id="getSignalBtn" onclick="getSignal()">⚡ Get Signal</button>
+  </div>
+
+  <div id="analysisBanner">
+    <div class="analysis-title">🔍 Analyzing Market...</div>
+    <div class="analysis-steps">
+      <div class="a-step" id="as1"><span class="a-step-icon">📡</span> Fetching live market data</div>
+      <div class="a-step" id="as2"><span class="a-step-icon">📊</span> Reading candlestick patterns</div>
+      <div class="a-step" id="as3"><span class="a-step-icon">📈</span> Calculating RSI &amp; MACD indicators</div>
+      <div class="a-step" id="as4"><span class="a-step-icon">🧠</span> Running AI prediction model</div>
+      <div class="a-step" id="as5"><span class="a-step-icon">✅</span> Signal ready</div>
+    </div>
+    <div class="a-bar"><div class="a-bar-fill" id="aBarFill"></div></div>
+  </div>
+
+  <div id="signalResult">
+    <div class="sig-pills" id="sigPills"></div>
+    <div class="sig-arrow" id="sigArrow"></div>
+    <div class="sig-direction" id="sigDir"></div>
+    <div class="sig-label" id="sigLabel"></div>
+    <div class="strength-row">
+      <span class="strength-label">Signal Strength</span>
+      <div class="strength-bars" id="strengthBars">
+        <div class="sbar"></div><div class="sbar"></div><div class="sbar"></div><div class="sbar"></div><div class="sbar"></div>
+      </div>
+    </div>
+    <div class="countdown-section">
+      <div class="countdown-label">Signal Valid For (Market Synced)</div>
+      <div class="countdown-time" id="countdownTime">--:--</div>
+      <div class="countdown-bar-bg"><div class="countdown-bar" id="countdownBar" style="width:100%"></div></div>
+    </div>
+    <div class="sync-badge"><span class="sync-dot"></span>Synced with <span id="syncTzLabel"></span> market candle time</div>
+  </div>
+
+  <footer>Chinese Pro Bot · For Educational Purposes Only · Trade At Your Own Risk</footer>
+</div>
+
+<script>
+const ALL_TIMEZONES = [
+  {label:'UTC-12 IDLW', offset:'UTC-12', city:"Int'l Date Line West"},
+  {label:'UTC-11 SST',  offset:'UTC-11', city:'American Samoa'},
+  {label:'UTC-10 HST',  offset:'UTC-10', city:'Honolulu, Hawaii'},
+  {label:'UTC-9 AKST',  offset:'UTC-9',  city:'Anchorage, Alaska'},
+  {label:'UTC-8 PST',   offset:'UTC-8',  city:'Los Angeles / Seattle'},
+  {label:'UTC-7 MST',   offset:'UTC-7',  city:'Denver / Phoenix'},
+  {label:'UTC-6 CST',   offset:'UTC-6',  city:'Chicago / Mexico City'},
+  {label:'UTC-5 EST',   offset:'UTC-5',  city:'New York / Toronto'},
+  {label:'UTC-4 AST',   offset:'UTC-4',  city:'Santiago / Halifax'},
+  {label:'UTC-3 BRT',   offset:'UTC-3',  city:'Sao Paulo / Buenos Aires'},
+  {label:'UTC-2',       offset:'UTC-2',  city:'Mid-Atlantic'},
+  {label:'UTC-1 AZOT',  offset:'UTC-1',  city:'Azores Islands'},
+  {label:'UTC+0 GMT',   offset:'UTC+0',  city:'London / Dublin / Lisbon'},
+  {label:'UTC+1 CET',   offset:'UTC+1',  city:'Paris / Berlin / Rome'},
+  {label:'UTC+2 EET',   offset:'UTC+2',  city:'Cairo / Istanbul / Athens'},
+  {label:'UTC+3 MSK',   offset:'UTC+3',  city:'Moscow / Riyadh / Nairobi'},
+  {label:'UTC+4 GST',   offset:'UTC+4',  city:'Dubai / Abu Dhabi'},
+  {label:'UTC+4:30',    offset:'UTC+4:30', city:'Kabul, Afghanistan'},
+  {label:'UTC+5 PKT',   offset:'UTC+5',  city:'Karachi / Islamabad'},
+  {label:'UTC+5:30 IST',offset:'UTC+5:30',city:'New Delhi / Mumbai'},
+  {label:'UTC+5:45',    offset:'UTC+5:45',city:'Kathmandu, Nepal'},
+  {label:'UTC+6 BST',   offset:'UTC+6',  city:'Dhaka / Almaty'},
+  {label:'UTC+6:30',    offset:'UTC+6:30',city:'Yangon, Myanmar'},
+  {label:'UTC+7 ICT',   offset:'UTC+7',  city:'Bangkok / Jakarta / Hanoi'},
+  {label:'UTC+8 CST',   offset:'UTC+8',  city:'Beijing / Singapore / KL'},
+  {label:'UTC+8 HKT',   offset:'UTC+8',  city:'Hong Kong / Manila / Perth'},
+  {label:'UTC+9 JST',   offset:'UTC+9',  city:'Tokyo / Seoul / Osaka'},
+  {label:'UTC+9:30',    offset:'UTC+9:30',city:'Adelaide / Darwin'},
+  {label:'UTC+10 AEST', offset:'UTC+10', city:'Sydney / Melbourne'},
+  {label:'UTC+11 AEDT', offset:'UTC+11', city:'Honiara / Magadan'},
+  {label:'UTC+12 NZST', offset:'UTC+12', city:'Auckland / Fiji'},
+];
+
+const ALL_MARKETS = [
+  {id:'BTC/USDT', name:'BTC/USDT', icon:'₿', type:'Crypto', desc:'Bitcoin / Tether'},
+  {id:'ETH/USDT', name:'ETH/USDT', icon:'Ξ', type:'Crypto', desc:'Ethereum / Tether'},
+  {id:'BNB/USDT', name:'BNB/USDT', icon:'🔶', type:'Crypto', desc:'Binance Coin'},
+  {id:'SOL/USDT', name:'SOL/USDT', icon:'◎', type:'Crypto', desc:'Solana'},
+  {id:'XRP/USDT', name:'XRP/USDT', icon:'💧', type:'Crypto', desc:'Ripple'},
+  {id:'ADA/USDT', name:'ADA/USDT', icon:'🔵', type:'Crypto', desc:'Cardano'},
+  {id:'DOGE/USDT',name:'DOGE/USDT',icon:'🐕', type:'Crypto', desc:'Dogecoin'},
+  {id:'AVAX/USDT',name:'AVAX/USDT',icon:'🏔️',type:'Crypto', desc:'Avalanche'},
+  {id:'DOT/USDT', name:'DOT/USDT', icon:'⚫', type:'Crypto', desc:'Polkadot'},
+  {id:'MATIC/USDT',name:'MATIC/USDT',icon:'🔷',type:'Crypto',desc:'Polygon'},
+  {id:'LINK/USDT',name:'LINK/USDT',icon:'🔗', type:'Crypto', desc:'Chainlink'},
+  {id:'LTC/USDT', name:'LTC/USDT', icon:'🥈', type:'Crypto', desc:'Litecoin'},
+  {id:'TRX/USDT', name:'TRX/USDT', icon:'🔴', type:'Crypto', desc:'TRON'},
+  {id:'SHIB/USDT',name:'SHIB/USDT',icon:'🐶', type:'Crypto', desc:'Shiba Inu'},
+  {id:'TON/USDT', name:'TON/USDT', icon:'💎', type:'Crypto', desc:'Toncoin'},
+  {id:'PEPE/USDT',name:'PEPE/USDT',icon:'🐸', type:'Crypto', desc:'Pepe Meme Coin'},
+  {id:'EUR/USD',  name:'EUR/USD',  icon:'€',  type:'Forex',  desc:'Euro vs US Dollar'},
+  {id:'GBP/USD',  name:'GBP/USD',  icon:'£',  type:'Forex',  desc:'British Pound vs Dollar'},
+  {id:'USD/JPY',  name:'USD/JPY',  icon:'¥',  type:'Forex',  desc:'Dollar vs Japanese Yen'},
+  {id:'AUD/USD',  name:'AUD/USD',  icon:'🦘', type:'Forex',  desc:'Australian Dollar vs USD'},
+  {id:'USD/CAD',  name:'USD/CAD',  icon:'🍁', type:'Forex',  desc:'Dollar vs Canadian Dollar'},
+  {id:'USD/CHF',  name:'USD/CHF',  icon:'🇨🇭',type:'Forex', desc:'Dollar vs Swiss Franc'},
+  {id:'NZD/USD',  name:'NZD/USD',  icon:'🥝', type:'Forex',  desc:'New Zealand Dollar vs USD'},
+  {id:'EUR/GBP',  name:'EUR/GBP',  icon:'🇪🇺',type:'Forex', desc:'Euro vs British Pound'},
+  {id:'EUR/JPY',  name:'EUR/JPY',  icon:'🇯🇵',type:'Forex', desc:'Euro vs Japanese Yen'},
+  {id:'EUR/USD OTC',name:'EUR/USD OTC',icon:'🔄',type:'OTC',desc:'OTC 24/7 Trading'},
+  {id:'GBP/USD OTC',name:'GBP/USD OTC',icon:'🔄',type:'OTC',desc:'OTC 24/7 Trading'},
+  {id:'USD/JPY OTC',name:'USD/JPY OTC',icon:'🔄',type:'OTC',desc:'OTC 24/7 Trading'},
+  {id:'AUD/USD OTC',name:'AUD/USD OTC',icon:'🔄',type:'OTC',desc:'OTC 24/7 Trading'},
+  {id:'USD/CAD OTC',name:'USD/CAD OTC',icon:'🔄',type:'OTC',desc:'OTC 24/7 Trading'},
+  {id:'BTC/USD OTC',name:'BTC/USD OTC',icon:'🔄',type:'OTC',desc:'Crypto OTC 24/7'},
+  {id:'ETH/USD OTC',name:'ETH/USD OTC',icon:'🔄',type:'OTC',desc:'Crypto OTC 24/7'},
+  {id:'GOLD',     name:'GOLD (XAU)', icon:'🥇',type:'Commodity',desc:'Spot Gold / XAU-USD'},
+  {id:'SILVER',   name:'SILVER (XAG)',icon:'🥈',type:'Commodity',desc:'Spot Silver / XAG-USD'},
+  {id:'OIL WTI',  name:'OIL WTI',  icon:'🛢️',type:'Commodity',desc:'Crude Oil West Texas'},
+  {id:'OIL BRENT',name:'OIL Brent',icon:'🛢️',type:'Commodity',desc:'Brent North Sea Crude'},
+  {id:'COPPER',   name:'COPPER',   icon:'🔶',type:'Commodity',desc:'XCU/USD Copper'},
+  {id:'PLATINUM', name:'PLATINUM', icon:'⚪',type:'Commodity',desc:'XPT/USD Platinum'},
+  {id:'NASDAQ',   name:'NASDAQ 100',icon:'📊',type:'Index',  desc:'US Tech Index'},
+  {id:'S&P 500',  name:'S&P 500',  icon:'🇺🇸',type:'Index', desc:'US 500 Index'},
+  {id:'DOW JONES',name:'Dow Jones',icon:'📈', type:'Index',  desc:'US 30 Blue-Chip'},
+  {id:'DAX 40',   name:'DAX 40',   icon:'🇩🇪',type:'Index', desc:'German Stock Index'},
+  {id:'FTSE 100', name:'FTSE 100', icon:'🇬🇧',type:'Index', desc:'UK 100 Stock Index'},
+  {id:'NIKKEI',   name:'Nikkei 225',icon:'🇯🇵',type:'Index',desc:'Japan Stock Index'},
+  {id:'BTC Perp', name:'BTC Perpetual',icon:'📉',type:'Futures',desc:'BTC USDT Perp Contract'},
+  {id:'ETH Perp', name:'ETH Perpetual',icon:'📉',type:'Futures',desc:'ETH USDT Perp Contract'},
+  {id:'SOL Perp', name:'SOL Perpetual',icon:'📉',type:'Futures',desc:'SOL USDT Perp Contract'},
+  {id:'Vol 75',   name:'Volatility 75',icon:'🎲',type:'Synthetic',desc:'Synthetic Index'},
+  {id:'Vol 100',  name:'Volatility 100',icon:'🎲',type:'Synthetic',desc:'Synthetic Index'},
+  {id:'Boom 500', name:'Boom 500',    icon:'💥',type:'Synthetic',desc:'Boom Index'},
+  {id:'Boom 1000',name:'Boom 1000',   icon:'💥',type:'Synthetic',desc:'Boom Index'},
+  {id:'Crash 500',name:'Crash 500',   icon:'💥',type:'Synthetic',desc:'Crash Index'},
+  {id:'APPLE',    name:'Apple Inc',   icon:'🍎',type:'Stock',  desc:'AAPL Shares'},
+  {id:'AMAZON',   name:'Amazon',      icon:'📦',type:'Stock',  desc:'AMZN Shares'},
+  {id:'GOOGLE',   name:'Alphabet',    icon:'🔍',type:'Stock',  desc:'GOOGL Shares'},
+  {id:'TESLA',    name:'Tesla',       icon:'⚡',type:'Stock',  desc:'TSLA Shares'},
+  {id:'MICROSOFT',name:'Microsoft',   icon:'🪟',type:'Stock',  desc:'MSFT Shares'},
+  {id:'NVIDIA',   name:'NVIDIA',      icon:'🖥️',type:'Stock', desc:'NVDA Shares'},
+  {id:'META',     name:'Meta',        icon:'👤',type:'Stock',  desc:'META Shares'},
+  {id:'NETFLIX',  name:'Netflix',     icon:'🎬',type:'Stock',  desc:'NFLX Shares'},
+];
+
+const CATEGORIES = ['All','Crypto','Forex','OTC','Commodity','Index','Futures','Synthetic','Stock'];
+const state = {timezone:null, market:null, timeMin:null};
+let activeSignal = null, countdownInterval = null, currentCat = 'All';
+
+// ── TIMEZONE OFFSET TO MS ─────────────────────────────
+function tzOffsetMs(offsetStr) {
+  const m = offsetStr.match(/UTC([+-])(\d+)(?::(\d+))?/);
+  if (!m) return 0;
+  const sign = m[1] === '+' ? 1 : -1;
+  return sign * (parseInt(m[2]) * 60 + (m[3] ? parseInt(m[3]) : 0)) * 60000;
+}
+
+// ── GET PERIOD START (aligned to timezone midnight) ───
+// For 1-min candles in UTC+5: periods are 10:00, 10:01, 10:02...
+// Returns the UTC ms timestamp of when the CURRENT period started
+function getPeriodStartMs(timeMin, timezone) {
+  const offMs = tzOffsetMs(timezone);
+  const periodMs = timeMin * 60000;
+  // Current time expressed as "what time is it in that timezone"
+  const tzNow = Date.now() + offMs;
+  const d = new Date(tzNow);
+  // Milliseconds since midnight in that timezone
+  const msSinceMidnight = (d.getUTCHours() * 3600 + d.getUTCMinutes() * 60 + d.getUTCSeconds()) * 1000 + d.getUTCMilliseconds();
+  // How many ms into the current period are we
+  const msIntoPeriod = msSinceMidnight % periodMs;
+  // Period start in real UTC ms
+  return Date.now() - msIntoPeriod;
+}
+
+// ── DETERMINISTIC SIGNAL ──────────────────────────────
+// Same market + same timeMin + same period = ALWAYS same direction
+// Even after page refresh, same signal will show
+function generateSignal(market, timeMin, periodStartMs) {
+  const key = market + '|' + timeMin + '|' + Math.floor(periodStartMs / 1000);
+  let h = 5381;
+  for (let i = 0; i < key.length; i++) {
+    h = Math.imul(h, 33) ^ key.charCodeAt(i);
+  }
+  return (h >>> 0) % 2 === 0 ? 'UP' : 'DOWN';
+}
+
+// ── DETERMINISTIC STRENGTH ────────────────────────────
+function getStrength(market, timeMin, periodStartMs) {
+  const key = 'str|' + market + '|' + timeMin + '|' + Math.floor(periodStartMs / 1000);
+  let h = 1234;
+  for (let i = 0; i < key.length; i++) {
+    h = Math.imul(h, 37) ^ key.charCodeAt(i);
+  }
+  return ((h >>> 0) % 2) + 4; // 4 or 5
+}
+
+// ── INIT ──────────────────────────────────────────────
+window.addEventListener('load', () => {
+  buildTzList();
+  buildCatTabs();
+  buildMktList();
+  loadSession();
+});
+
+// ── TIMEZONE ──────────────────────────────────────────
+function buildTzList(filter) {
+  const list = document.getElementById('tzList');
+  const q = (filter || '').toLowerCase();
+  const items = q
+    ? ALL_TIMEZONES.filter(t => t.label.toLowerCase().includes(q) || t.city.toLowerCase().includes(q) || t.offset.toLowerCase().includes(q))
+    : ALL_TIMEZONES;
+  list.innerHTML = items.map(t => `
+    <div class="list-item ${state.timezone===t.offset?'selected':''}" onclick="selectTz('${t.offset}','${t.label}','${t.city}')">
+      <span class="list-item-icon">🌍</span>
+      <div class="list-item-main">
+        <div class="list-item-name">${t.label}</div>
+        <div class="list-item-sub">${t.city}</div>
+      </div>
+      <span class="list-item-check">✓</span>
+    </div>`).join('');
+}
+
+function filterTz() { buildTzList(document.getElementById('tzSearch').value); }
+
+function selectTz(offset, label, city) {
+  state.timezone = offset;
+  document.getElementById('tzDisplay').classList.add('show');
+  document.getElementById('tzDisplayName').textContent = label;
+  document.getElementById('tzDisplaySub').textContent = city;
+  document.getElementById('tzSearchWrap').style.display = 'none';
+  document.getElementById('step2Card').style.opacity = '1';
+  document.getElementById('step2Card').style.pointerEvents = 'auto';
+  buildMktList();
+  saveState();
+  checkReady();
+}
+
+function resetTz() {
+  document.getElementById('tzDisplay').classList.remove('show');
+  document.getElementById('tzSearchWrap').style.display = 'block';
+  document.getElementById('tzSearch').value = '';
+  buildTzList();
+}
+
+// ── MARKET ────────────────────────────────────────────
+function buildCatTabs() {
+  const t = document.getElementById('catTabs');
+  t.innerHTML = CATEGORIES.map(c =>
+    `<button class="cat-tab ${c==='All'?'active':''}" onclick="setCat('${c}',this)">${c}</button>`
+  ).join('');
+}
+
+function setCat(cat, btn) {
+  currentCat = cat;
+  document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('mktSearch').value = '';
+  buildMktList();
+}
+
+function buildMktList(filter) {
+  const list = document.getElementById('mktList');
+  const q = (filter || document.getElementById('mktSearch').value || '').toLowerCase();
+  let items = currentCat === 'All' ? ALL_MARKETS : ALL_MARKETS.filter(m => m.type === currentCat);
+  if (q) items = items.filter(m => m.name.toLowerCase().includes(q) || m.desc.toLowerCase().includes(q) || m.id.toLowerCase().includes(q));
+  if (!items.length) { list.innerHTML = '<div style="padding:16px;text-align:center;color:#aaa;font-size:12px;">No markets found</div>'; return; }
+  list.innerHTML = items.map(m => `
+    <div class="list-item ${state.market===m.id?'selected':''}" onclick="selectMkt('${m.id}')">
+      <span class="list-item-icon">${m.icon}</span>
+      <div class="list-item-main">
+        <div class="list-item-name">${m.name}</div>
+        <div class="list-item-sub">${m.type} · ${m.desc}</div>
+      </div>
+      <span class="list-item-check">✓</span>
+    </div>`).join('');
+}
+
+function filterMkt() { buildMktList(); }
+
+function selectMkt(id) {
+  state.market = id;
+  const m = ALL_MARKETS.find(x => x.id === id);
+  document.getElementById('mktDisplay').classList.add('show');
+  document.getElementById('mktDisplayIcon').textContent = m.icon;
+  document.getElementById('mktDisplayName').textContent = m.name;
+  document.getElementById('mktDisplaySub').textContent = m.type + ' · ' + m.desc;
+  document.getElementById('mktSearchWrap').style.display = 'none';
+  document.getElementById('step3Card').style.opacity = '1';
+  document.getElementById('step3Card').style.pointerEvents = 'auto';
+  clearSignalDisplay();
+  saveState();
+  checkReady();
+}
+
+function resetMkt() {
+  document.getElementById('mktDisplay').classList.remove('show');
+  document.getElementById('mktSearchWrap').style.display = 'block';
+  state.market = null;
+  buildMktList();
+  saveState();
+  checkReady();
+}
+
+// ── TIME ──────────────────────────────────────────────
+function selectTime(min, btn) {
+  state.timeMin = min;
+  document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  clearSignalDisplay();
+  saveState();
+  checkReady();
+}
+
+// ── READY CHECK ───────────────────────────────────────
+function checkReady() {
+  document.getElementById('signalBtnWrap').style.display =
+    (state.timezone && state.market && state.timeMin) ? 'block' : 'none';
+}
+
+// ── SAVE / RESTORE STATE ──────────────────────────────
+function saveState() {
+  sessionStorage.setItem('cpbState', JSON.stringify({
+    timezone: state.timezone,
+    market: state.market,
+    timeMin: state.timeMin
+  }));
+}
+
+// ── GET SIGNAL ────────────────────────────────────────
+function getSignal() {
+  // Calculate current period info
+  const periodStartMs = getPeriodStartMs(state.timeMin, state.timezone);
+  const periodMs = state.timeMin * 60000;
+  const expiry = periodStartMs + periodMs;
+
+  // If already showing signal for same period, just re-show
+  if (activeSignal &&
+      activeSignal.market === state.market &&
+      activeSignal.timeMin === state.timeMin &&
+      activeSignal.timezone === state.timezone &&
+      activeSignal.periodStartMs === periodStartMs) {
+    showSignal(activeSignal, false);
+    return;
+  }
+
+  document.getElementById('signalBtnWrap').style.display = 'none';
+  document.getElementById('signalResult').style.display = 'none';
+
+  const banner = document.getElementById('analysisBanner');
+  banner.style.display = 'block';
+  const steps = ['as1','as2','as3','as4','as5'];
+  steps.forEach(s => { document.getElementById(s).className = 'a-step'; });
+  document.getElementById('aBarFill').style.width = '0%';
+
+  let i = 0;
+  function nextStep() {
+    if (i > 0) document.getElementById(steps[i-1]).className = 'a-step done';
+    if (i < steps.length) {
+      document.getElementById(steps[i]).className = 'a-step active';
+      document.getElementById('aBarFill').style.width = ((i+1)/steps.length*100) + '%';
+      i++;
+      setTimeout(nextStep, i === steps.length ? 600 : 900);
+    } else {
+      setTimeout(() => {
+        banner.style.display = 'none';
+        // Recalculate at display time (in case time passed during animation)
+        const pStartMs = getPeriodStartMs(state.timeMin, state.timezone);
+        const pMs = state.timeMin * 60000;
+        const pExpiry = pStartMs + pMs;
+        const direction = generateSignal(state.market, state.timeMin, pStartMs);
+        const strength = getStrength(state.market, state.timeMin, pStartMs);
+        activeSignal = {
+          direction, strength,
+          timezone: state.timezone,
+          market: state.market,
+          timeMin: state.timeMin,
+          expiry: pExpiry,
+          durationMs: pMs,
+          periodStartMs: pStartMs
+        };
+        showSignal(activeSignal, true);
+      }, 400);
+    }
+  }
+  nextStep();
+}
+
+// ── SHOW SIGNAL ───────────────────────────────────────
+function showSignal(sig, animate) {
+  const box = document.getElementById('signalResult');
+  const isUp = sig.direction === 'UP';
+  box.style.display = 'block';
+
+  document.getElementById('sigPills').innerHTML =
+    `<span class="sig-pill">🌍 ${sig.timezone}</span><span class="sig-pill">📊 ${sig.market}</span><span class="sig-pill">⏱ ${sig.timeMin} MIN</span>`;
+
+  document.getElementById('sigArrow').textContent = isUp ? '▲' : '▼';
+  document.getElementById('sigArrow').style.color = isUp ? '#2e7d32' : '#c62828';
+  const dir = document.getElementById('sigDir');
+  dir.textContent = isUp ? 'BUY / UP' : 'SELL / DOWN';
+  dir.className = 'sig-direction ' + (isUp ? 'up' : 'down');
+  document.getElementById('sigLabel').textContent = isUp ? 'Signal: Enter a BUY position' : 'Signal: Enter a SELL position';
+
+  document.querySelectorAll('#strengthBars .sbar').forEach((b,i) => {
+    b.className = 'sbar' + (i < sig.strength ? (' ' + (isUp ? 'up' : 'down')) : '');
+  });
+
+  // Show timezone label in sync badge
+  const tzObj = ALL_TIMEZONES.find(t => t.offset === sig.timezone);
+  document.getElementById('syncTzLabel').textContent = tzObj ? tzObj.label : sig.timezone;
+
+  startCountdown(sig);
+  document.getElementById('signalBtnWrap').style.display = 'none';
+}
+
+// ── COUNTDOWN (market-synced) ─────────────────────────
+function startCountdown(sig) {
+  if (countdownInterval) clearInterval(countdownInterval);
+  const bar = document.getElementById('countdownBar');
+  bar.className = 'countdown-bar ' + (sig.direction === 'UP' ? 'up' : 'down');
+
+  function tick() {
+    // Recalculate period live each tick so it stays perfectly synced
+    const pStartMs = getPeriodStartMs(sig.timeMin, sig.timezone);
+    const pMs = sig.timeMin * 60000;
+    const pExpiry = pStartMs + pMs;
+
+    // If we're now in a NEW period, update signal direction for new period
+    if (pStartMs !== sig.periodStartMs) {
+      // New candle started — generate new signal for new period
+      const newDirection = generateSignal(sig.market, sig.timeMin, pStartMs);
+      const newStrength = getStrength(sig.market, sig.timeMin, pStartMs);
+      activeSignal = {
+        direction: newDirection,
+        strength: newStrength,
+        timezone: sig.timezone,
+        market: sig.market,
+        timeMin: sig.timeMin,
+        expiry: pExpiry,
+        durationMs: pMs,
+        periodStartMs: pStartMs
+      };
+      showSignal(activeSignal, false);
+      return;
+    }
+
+    const rem = pExpiry - Date.now();
+    if (rem <= 0) {
+      document.getElementById('countdownTime').textContent = '00:00';
+      bar.style.width = '0%';
+      clearInterval(countdownInterval);
+      return;
+    }
+
+    const mins = Math.floor(rem / 60000);
+    const secs = Math.floor((rem % 60000) / 1000);
+    document.getElementById('countdownTime').textContent =
+      String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+    // Bar width = fraction of period remaining
+    bar.style.width = (rem / pMs * 100) + '%';
+  }
+
+  tick();
+  countdownInterval = setInterval(tick, 1000);
+}
+
+function clearSignalDisplay() {
+  document.getElementById('signalResult').style.display = 'none';
+  if (countdownInterval) clearInterval(countdownInterval);
+  activeSignal = null;
+}
+
+// ── SESSION RESTORE ───────────────────────────────────
+function loadSession() {
+  const stored = sessionStorage.getItem('cpbState');
+  if (!stored) return;
+  try {
+    const s = JSON.parse(stored);
+
+    if (s.timezone) {
+      const tz = ALL_TIMEZONES.find(t => t.offset === s.timezone);
+      if (tz) {
+        state.timezone = s.timezone;
+        document.getElementById('tzDisplay').classList.add('show');
+        document.getElementById('tzDisplayName').textContent = tz.label;
+        document.getElementById('tzDisplaySub').textContent = tz.city;
+        document.getElementById('tzSearchWrap').style.display = 'none';
+        document.getElementById('step2Card').style.opacity = '1';
+        document.getElementById('step2Card').style.pointerEvents = 'auto';
+      }
+    }
+
+    if (s.market) {
+      const mkt = ALL_MARKETS.find(m => m.id === s.market);
+      if (mkt) {
+        state.market = s.market;
+        document.getElementById('mktDisplay').classList.add('show');
+        document.getElementById('mktDisplayIcon').textContent = mkt.icon;
+        document.getElementById('mktDisplayName').textContent = mkt.name;
+        document.getElementById('mktDisplaySub').textContent = mkt.type + ' · ' + mkt.desc;
+        document.getElementById('mktSearchWrap').style.display = 'none';
+        document.getElementById('step3Card').style.opacity = '1';
+        document.getElementById('step3Card').style.pointerEvents = 'auto';
+      }
+    }
+
+    if (s.timeMin) {
+      state.timeMin = s.timeMin;
+      // Highlight the correct time button
+      document.querySelectorAll('.time-btn').forEach(b => {
+        const map = {'1 MIN':1,'2 MIN':2,'3 MIN':3,'5 MIN':5,'10 MIN':10,'15 MIN':15,'30 MIN':30,'1 HOUR':60,'4 HOUR':240};
+        if (map[b.textContent.trim()] === s.timeMin) b.classList.add('selected');
+      });
+    }
+
+    // If all three selected, compute and show current period signal
+    if (state.timezone && state.market && state.timeMin) {
+      checkReady();
+      const pStartMs = getPeriodStartMs(state.timeMin, state.timezone);
+      const pMs = state.timeMin * 60000;
+      const pExpiry = pStartMs + pMs;
+      const direction = generateSignal(state.market, state.timeMin, pStartMs);
+      const strength = getStrength(state.market, state.timeMin, pStartMs);
+      activeSignal = {
+        direction, strength,
+        timezone: state.timezone,
+        market: state.market,
+        timeMin: state.timeMin,
+        expiry: pExpiry,
+        durationMs: pMs,
+        periodStartMs: pStartMs
+      };
+      showSignal(activeSignal, false);
+    }
+  } catch(e) { sessionStorage.removeItem('cpbState'); }
+}
+</script>
+</body>
+</html>
